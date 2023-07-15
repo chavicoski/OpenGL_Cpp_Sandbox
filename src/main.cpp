@@ -11,5 +11,10 @@ int main() {
 
   window = glfwCreateWindow(640, 480, "OpenGL Sandbox", NULL, NULL);
 
+  while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
+  }
+
+  glfwTerminate();
   return 0;
 }
