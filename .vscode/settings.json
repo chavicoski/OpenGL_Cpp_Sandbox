@@ -1,4 +1,4 @@
 {
     "cmake.configureOnOpen": true,
-    "cSpell.words": ["glfw", "Wwindow"]
+    "cSpell.words": ["Dloadproc", "glfw", "Programiv", "Shaderiv", "Wwindow"]
 }

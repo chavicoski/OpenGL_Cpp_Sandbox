@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(hello_window VERSION 0.1.0)
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(hello_window src/main.cpp dependencies/glad/glad.c)
 
