@@ -71,6 +71,35 @@ unsigned int make_shader(const std::string &vertex_filepath,
   return shader;
 }
 
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+  glViewport(0, 0, width, height);
+}
+
+float triangle_vertices[] = {
+    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left, Red
+    0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom-right, Green
+    0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, // Upper-center, Blue
+};
+
+unsigned int draw_triangle() {
+  // Prepare the buffer to sed the vertex data
+  unsigned int VBO;
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  // Push the vertex data into the buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices,
+               GL_STATIC_DRAW);
+  // Prepare the vertex position attribute
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+  // Prepare the vertex color attribute
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  return VBO;
+}
+
 int main() {
   // Initialize the window manager
   if (!glfwInit()) {
@@ -98,15 +127,33 @@ int main() {
     return 1;
   }
 
+  // Ensure that the OpenGL viewport is adjusted to the window size
+  int frameWidth, frameHeight;
+  glfwGetFramebufferSize(window, &frameWidth, &frameHeight);
+  glViewport(0, 0, frameWidth, frameHeight);
+  // Set a callback to adjust the viewport when resizing the window
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
   glClearColor(0.25f, 0.5f, 0.75f, 1.0f);
 
   unsigned int shader =
       make_shader("../src/shaders/vertex.txt", "../src/shaders/fragment.txt");
 
+  unsigned int triangle_VAO;
+  glGenVertexArrays(1, &triangle_VAO);
+  glBindVertexArray(triangle_VAO);
+  unsigned int triangle_VBO = draw_triangle();
+
   while (!glfwWindowShouldClose(window)) {
+    // Read used input
     glfwPollEvents();
+    // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT);
+    // Render
     glUseProgram(shader);
+    glBindVertexArray(triangle_VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // Display the updated rendered data
     glfwSwapBuffers(window);
   }
 
