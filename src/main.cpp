@@ -75,13 +75,13 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-float triangle_vertices[] = {
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left, Red
-    0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom-right, Green
-    0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, // Upper-center, Blue
-};
-
-unsigned int draw_triangle() {
+void draw_triangle() {
+  // Triangle vertices data (position and color)
+  constexpr float triangle_vertices[18] = {
+      -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left, Red
+      0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom-right, Green
+      0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-center, Blue
+  };
   // Prepare the buffer to sed the vertex data
   unsigned int VBO;
   glGenBuffers(1, &VBO);
@@ -96,8 +96,44 @@ unsigned int draw_triangle() {
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+}
 
-  return VBO;
+void draw_rectangle() {
+  // Rectangle unique vertices data (postion and color)
+  constexpr float rectangle_vertices[24] = {
+      0.5f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f, // Top-right
+      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, // Bottom-right
+      -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, // Bottom-left
+      -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f  // Top-left
+  };
+  // Order to draw the unique vertices to form the rectangle
+  constexpr unsigned int indices[6] = {
+      0, 1, 3, // Top triangle
+      1, 2, 3  // Bottom triangle
+  };
+  // Prepare the Elements Buffer Object for `index drawing`
+  unsigned int EBO;
+  glGenBuffers(1, &EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  // Push the vertex indexes into the buffer
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  // Prepare the vertex buffer for the unique vertices data
+  unsigned int VBO;
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  // Push the vertex data into the buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(rectangle_vertices), rectangle_vertices,
+               GL_STATIC_DRAW);
+  // Prepare the vertex position attribute
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+  // Prepare the vertex color attribute
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
 }
 
 int main() {
@@ -139,20 +175,36 @@ int main() {
   unsigned int shader =
       make_shader("../src/shaders/vertex.txt", "../src/shaders/fragment.txt");
 
+  // Store the triangle draw config in a Vertex Array Object
   unsigned int triangle_VAO;
   glGenVertexArrays(1, &triangle_VAO);
   glBindVertexArray(triangle_VAO);
-  unsigned int triangle_VBO = draw_triangle();
+  draw_triangle();
+
+  // Store the rectangle draw config in a Vertex Array Object
+  unsigned int rectangle_VAO;
+  glGenVertexArrays(1, &rectangle_VAO);
+  glBindVertexArray(rectangle_VAO);
+  draw_rectangle();
 
   while (!glfwWindowShouldClose(window)) {
     // Read used input
     glfwPollEvents();
+
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT);
-    // Render
+
+    // Prepare the shaders to draw
     glUseProgram(shader);
+
+    // Draw the triangle
     glBindVertexArray(triangle_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Draw the rectangle
+    glBindVertexArray(rectangle_VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
     // Display the updated rendered data
     glfwSwapBuffers(window);
   }
