@@ -111,7 +111,7 @@ void draw_rectangle() {
       0, 1, 3, // Top triangle
       1, 2, 3  // Bottom triangle
   };
-  // Prepare the Elements Buffer Object for `index drawing`
+  // Prepare the Element Buffer Object for `index drawing`
   unsigned int EBO;
   glGenBuffers(1, &EBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
