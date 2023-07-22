@@ -5,10 +5,9 @@
 #include <glad/glad.h>
 #include <string>
 
-unsigned int make_module(const std::string &filepath,
-                         const unsigned int module_type);
+GLuint make_module(const std::string &filepath, const GLuint module_type);
 
-unsigned int make_shader(const std::string &vertex_filepath,
-                         const std::string &fragment_filepath);
+GLuint make_shader(const std::string &vertex_filepath,
+                   const std::string &fragment_filepath);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);

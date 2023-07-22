@@ -4,8 +4,11 @@
         "Dloadproc",
         "framebuffer",
         "glfw",
+        "Mipmap",
+        "Parameteri",
         "Programiv",
         "Shaderiv",
+        "stbi",
         "Wwindow"
     ]
 }

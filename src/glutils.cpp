@@ -4,8 +4,7 @@
 #include <sstream>
 #include <vector>
 
-unsigned int make_module(const std::string &filepath,
-                         const unsigned int module_type) {
+GLuint make_module(const std::string &filepath, const GLuint module_type) {
   std::ifstream file;
   std::stringstream bufferedLines;
   std::string line;
@@ -20,7 +19,7 @@ unsigned int make_module(const std::string &filepath,
   const char *ShaderSource = auxShaderSource.c_str();
 
   // Create and compile the shader module
-  unsigned int shaderModule = glCreateShader(module_type);
+  GLuint shaderModule = glCreateShader(module_type);
   glShaderSource(shaderModule, 1, &ShaderSource, NULL);
   glCompileShader(shaderModule);
 
@@ -36,16 +35,16 @@ unsigned int make_module(const std::string &filepath,
   return shaderModule;
 }
 
-unsigned int make_shader(const std::string &vertex_filepath,
-                         const std::string &fragment_filepath) {
+GLuint make_shader(const std::string &vertex_filepath,
+                   const std::string &fragment_filepath) {
   // Create the compiled shaders
-  std::vector<unsigned int> modules;
+  std::vector<GLuint> modules;
   modules.push_back(make_module(vertex_filepath, GL_VERTEX_SHADER));
   modules.push_back(make_module(fragment_filepath, GL_FRAGMENT_SHADER));
 
   // Attach the shader modules to the shader program
-  unsigned int shader = glCreateProgram();
-  for (unsigned int shaderModule : modules) {
+  GLuint shader = glCreateProgram();
+  for (GLuint shaderModule : modules) {
     glAttachShader(shader, shaderModule);
   }
   // Link the modules
@@ -61,7 +60,7 @@ unsigned int make_shader(const std::string &vertex_filepath,
   }
 
   // After linking the shaders source can be deleted
-  for (unsigned int shaderModule : modules) {
+  for (GLuint shaderModule : modules) {
     glDeleteShader(shaderModule);
   }
 
