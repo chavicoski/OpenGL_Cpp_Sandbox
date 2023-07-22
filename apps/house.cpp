@@ -161,7 +161,7 @@ int main() {
   glBindVertexArray(rectangle_VAO);
   draw_rectangle();
 
-  GLint texLocation = glGetUniformLocation(shader, "ourTexture");
+  GLint texLocation = glGetUniformLocation(shader, "baseTexture");
 
   while (!glfwWindowShouldClose(window)) {
     // Read used input
