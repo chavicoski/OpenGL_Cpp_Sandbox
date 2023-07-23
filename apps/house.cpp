@@ -3,6 +3,9 @@
 #include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 GLuint texture_setup(const std::string &filepath) {
   // Generate the OpenGL texture object
@@ -142,8 +145,8 @@ int main() {
 
   glClearColor(0.25f, 0.5f, 0.75f, 1.0f);
 
-  GLuint shader = make_shader("../../src/shaders/vertex.txt",
-                              "../../src/shaders/fragment.txt");
+  GLuint shader = make_shader("../../src/shaders/vertex.vert",
+                              "../../src/shaders/fragment.frag");
 
   // Prepare the triangle texture
   GLuint triangle_tex = texture_setup("../../textures/roof.png");
@@ -161,7 +164,9 @@ int main() {
   glBindVertexArray(rectangle_VAO);
   draw_rectangle();
 
-  GLint texLocation = glGetUniformLocation(shader, "baseTexture");
+  // Get uniform variables locations to update them in the render loop
+  GLuint texLoc = glGetUniformLocation(shader, "baseTexture");
+  GLuint transformLoc = glGetUniformLocation(shader, "transform");
 
   while (!glfwWindowShouldClose(window)) {
     // Read used input
@@ -173,10 +178,18 @@ int main() {
     // Prepare the shaders to draw
     glUseProgram(shader);
 
+    // Initialize the transform matrix with the identity matrix
+    glm::mat4 transform = glm::mat4(1.0f);
+    // Apply rotation over Z-axis using the elapsed time
+    transform = glm::rotate(transform, (float)glfwGetTime(),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+    // Set transform data for the shader
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
     // Bind the triangle texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, triangle_tex);
-    glUniform1i(texLocation, 0);
+    glUniform1i(texLoc, 0);
     // Draw the triangle
     glBindVertexArray(triangle_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -184,7 +197,7 @@ int main() {
     // Bind the rectangle texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, rectangle_tex);
-    glUniform1i(texLocation, 0);
+    glUniform1i(texLoc, 0);
     // Draw the rectangle
     glBindVertexArray(rectangle_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
