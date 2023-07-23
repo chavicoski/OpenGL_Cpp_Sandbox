@@ -17,5 +17,8 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 
+# Build OpengGL math library
+add_subdirectory(glm)
+
 # Prepare Glad (library to get the OpenGL functionalities)
 add_library(glad glad/glad.c glad/glad.h)
