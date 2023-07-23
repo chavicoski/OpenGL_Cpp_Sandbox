@@ -183,6 +183,11 @@ int main() {
     // Apply rotation over Z-axis using the elapsed time
     transform = glm::rotate(transform, (float)glfwGetTime(),
                             glm::vec3(0.0f, 0.0f, 1.0f));
+    // Apply translation between rotations
+    transform = glm::translate(transform, glm::vec3(0.4f, 0.0f, 0.0f));
+    // Apply inverse rotation over Z-axis using the elapsed time
+    transform = glm::rotate(transform, -2 * (float)glfwGetTime(),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
     // Set transform data for the shader
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
