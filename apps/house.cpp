@@ -38,21 +38,37 @@ GLuint texture_setup(const std::string &filepath) {
   return texture;
 }
 
-void draw_triangle() {
+void set_up_roof() {
   // Triangle vertices data
   // Format: postion(x, y, z), color(r, g, b), texCoord(x, y)
-  constexpr float triangle_vertices[24] = {
-      -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Bottom-left, Red
-      0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Bottom-right, Green
-      0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f  // Top-center, Blue
+  constexpr float vertices[45] = {
+      -0.5f, 0.0f, 0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Left-front, Red
+      0.5f,  0.0f, 0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Right-front, Green
+      0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f, 0.5f, 1.0f, // Top-center, Blue
+      -0.5f, 0.0f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Left-back, Red
+      0.5f,  0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // Right-back, Green
   };
+  // Order to draw the unique vertices to form the roof pyramid
+  constexpr GLuint indices[12] = {
+      0, 2, 1, // Front
+      1, 2, 4, // Right
+      4, 2, 3, // Back
+      3, 2, 0  // Left
+  };
+  // Prepare the Element Buffer Object for `index drawing`
+  GLuint EBO;
+  glGenBuffers(1, &EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  // Push the vertex indexes into the buffer
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   // Prepare the buffer to sed the vertex data
   GLuint VBO;
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // Push the vertex data into the buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // Prepare the vertex position attribute
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
@@ -66,19 +82,29 @@ void draw_triangle() {
   glEnableVertexAttribArray(2);
 }
 
-void draw_rectangle() {
-  // Rectangle unique vertices data
+void set_up_walls() {
+  // Rectangle walls unique vertices data
   // Format: postion(x, y, z), color(r, g, b), texCoord(x, y)
-  constexpr float rectangle_vertices[32] = {
-      0.5f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-right
-      -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
-      -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f  // Top-left
+  constexpr float vertices[64] = {
+      0.5f,  0.0f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right-front
+      0.5f,  -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-right-front
+      -0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left-front
+      -0.5f, 0.0f,  0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left-front
+      0.5f,  0.0f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top-right-back
+      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-right-back
+      -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, // Bottom-left-back
+      -0.5f, 0.0f,  -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f  // Top-left-back
   };
-  // Order to draw the unique vertices to form the rectangle
-  constexpr GLuint indices[6] = {
-      0, 1, 3, // Top triangle
-      1, 2, 3  // Bottom triangle
+  // Order to draw the unique vertices to form the walls cube
+  constexpr GLuint indices[24] = {
+      0, 1, 3, // Top-front triangle
+      1, 2, 3, // Bottom-front triangle
+      4, 5, 7, // Top-back triangle
+      5, 6, 7, // Bottom-back triangle
+      0, 4, 1, // Top-right triangle
+      1, 4, 5, // Bottom-right triangle
+      3, 2, 7, // Top-left triangle
+      2, 6, 7  // Bottom-left triangle
   };
   // Prepare the Element Buffer Object for `index drawing`
   GLuint EBO;
@@ -88,14 +114,12 @@ void draw_rectangle() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   // Prepare the vertex buffer for the unique vertices data
   GLuint VBO;
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // Push the vertex data into the buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(rectangle_vertices), rectangle_vertices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // Prepare the vertex position attribute
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
@@ -152,21 +176,21 @@ int main() {
   GLuint shader = make_shader("../../src/shaders/vertex.vert",
                               "../../src/shaders/fragment.frag");
 
-  // Prepare the triangle texture
-  GLuint triangle_tex = texture_setup("../../textures/roof.png");
-  // Store the triangle draw config in a Vertex Array Object
-  GLuint triangle_VAO;
-  glGenVertexArrays(1, &triangle_VAO);
-  glBindVertexArray(triangle_VAO);
-  draw_triangle();
+  // Prepare the roof texture
+  GLuint roof_tex = texture_setup("../../textures/roof.png");
+  // Store the roof vertices config in a Vertex Array Object
+  GLuint roof_VAO;
+  glGenVertexArrays(1, &roof_VAO);
+  glBindVertexArray(roof_VAO);
+  set_up_roof();
 
-  // Prepare the rectangle texture
-  GLuint rectangle_tex = texture_setup("../../textures/container.jpg");
-  // Store the rectangle draw config in a Vertex Array Object
-  GLuint rectangle_VAO;
-  glGenVertexArrays(1, &rectangle_VAO);
-  glBindVertexArray(rectangle_VAO);
-  draw_rectangle();
+  // Prepare the walls texture
+  GLuint wall_tex = texture_setup("../../textures/container.jpg");
+  // Store the walls vertices config in a Vertex Array Object
+  GLuint walls_VAO;
+  glGenVertexArrays(1, &walls_VAO);
+  glBindVertexArray(walls_VAO);
+  set_up_walls();
 
   // Get uniform variables locations to update them in the render loop
   GLuint texLoc = glGetUniformLocation(shader, "baseTexture");
@@ -208,21 +232,21 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-    // Bind the triangle texture
+    // Bind the roof texture
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, triangle_tex);
+    glBindTexture(GL_TEXTURE_2D, roof_tex);
     glUniform1i(texLoc, 0);
-    // Draw the triangle
-    glBindVertexArray(triangle_VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // Draw the roof
+    glBindVertexArray(roof_VAO);
+    glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
-    // Bind the rectangle texture
+    // Bind the walls texture
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, rectangle_tex);
+    glBindTexture(GL_TEXTURE_2D, wall_tex);
     glUniform1i(texLoc, 0);
-    // Draw the rectangle
-    glBindVertexArray(rectangle_VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // Draw the walls
+    glBindVertexArray(walls_VAO);
+    glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
 
     // Display the updated rendered data
     glfwSwapBuffers(window);
