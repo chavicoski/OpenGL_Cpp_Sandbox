@@ -143,7 +143,11 @@ int main() {
   // Set a callback to adjust the viewport when resizing the window
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+  // Set the color to clear the screen
   glClearColor(0.25f, 0.5f, 0.75f, 1.0f);
+
+  // Enable Z-buffer
+  glEnable(GL_DEPTH_TEST);
 
   GLuint shader = make_shader("../../src/shaders/vertex.vert",
                               "../../src/shaders/fragment.frag");
@@ -166,30 +170,43 @@ int main() {
 
   // Get uniform variables locations to update them in the render loop
   GLuint texLoc = glGetUniformLocation(shader, "baseTexture");
-  GLuint transformLoc = glGetUniformLocation(shader, "transform");
+  GLuint modelLoc = glGetUniformLocation(shader, "model");
+  GLuint viewLoc = glGetUniformLocation(shader, "view");
+  GLuint projectionLoc = glGetUniformLocation(shader, "projection");
+
+  // Coordinates transform matrices
+  glm::mat4 model, view, projection;
+  view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
+  projection =
+      glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
   while (!glfwWindowShouldClose(window)) {
     // Read used input
     glfwPollEvents();
 
     // Clear the screen
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Prepare the shaders to draw
     glUseProgram(shader);
 
     // Initialize the transform matrix with the identity matrix
-    glm::mat4 transform = glm::mat4(1.0f);
+    model = glm::mat4(1.0f);
+    // Apply rotation over X-axis
+    model =
+        glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     // Apply rotation over Z-axis using the elapsed time
-    transform = glm::rotate(transform, (float)glfwGetTime(),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
+    model =
+        glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
     // Apply translation between rotations
-    transform = glm::translate(transform, glm::vec3(0.4f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.4f, 0.0f, 0.0f));
     // Apply inverse rotation over Z-axis using the elapsed time
-    transform = glm::rotate(transform, -2 * (float)glfwGetTime(),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::rotate(model, -2 * (float)glfwGetTime(),
+                        glm::vec3(0.0f, 0.0f, 1.0f));
     // Set transform data for the shader
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
     // Bind the triangle texture
     glActiveTexture(GL_TEXTURE0);
