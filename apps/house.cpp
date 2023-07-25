@@ -192,6 +192,11 @@ int main() {
   glBindVertexArray(walls_VAO);
   set_up_walls();
 
+  glm::vec3 house_positions[6] = {
+      glm::vec3(2.0f, 0.0f, -1.0f),  glm::vec3(-1.0f, 0.0f, 0.5f),
+      glm::vec3(0.9f, 0.0f, 1.0f),   glm::vec3(0.7f, 0.0f, -3.0f),
+      glm::vec3(-2.0f, 0.0f, -2.0f), glm::vec3(-0.8f, 0.0f, -6.0f)};
+
   // Get uniform variables locations to update them in the render loop
   GLuint texLoc = glGetUniformLocation(shader, "baseTexture");
   GLuint modelLoc = glGetUniformLocation(shader, "model");
@@ -200,9 +205,14 @@ int main() {
 
   // Coordinates transform matrices
   glm::mat4 model, view, projection;
-  view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
+  view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, -5.0f));
+  view = glm::rotate(view, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
   projection =
       glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+  // Config for the turn animation speed
+  const int min_speed = 2;
+  const int max_speed = 5;
 
   while (!glfwWindowShouldClose(window)) {
     // Read used input
@@ -214,39 +224,43 @@ int main() {
     // Prepare the shaders to draw
     glUseProgram(shader);
 
-    // Initialize the transform matrix with the identity matrix
-    model = glm::mat4(1.0f);
-    // Apply rotation over X-axis
-    model =
-        glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    // Apply rotation over Z-axis using the elapsed time
-    model =
-        glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-    // Apply translation between rotations
-    model = glm::translate(model, glm::vec3(0.4f, 0.0f, 0.0f));
-    // Apply inverse rotation over Z-axis using the elapsed time
-    model = glm::rotate(model, -2 * (float)glfwGetTime(),
-                        glm::vec3(0.0f, 0.0f, 1.0f));
-    // Set transform data for the shader
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    int speed_idx = 0;
+    bool invert_turn = false;
+    // Draw each house in its corresponding postion using the model transform
+    for (glm::vec3 &house_pos : house_positions) {
+      // Initialize the transform matrix with the identity matrix
+      model = glm::mat4(1.0f);
+      // Apply translation between rotations
+      model = glm::translate(model, house_pos);
+      // Apply rotation over Y-axis using the elapsed time
+      const float rotation =
+          (speed_idx % max_speed + min_speed) * glfwGetTime();
+      model = glm::rotate(model, invert_turn ? -rotation : rotation,
+                          glm::vec3(0.0f, 1.0f, 0.0f));
+      speed_idx++;
+      invert_turn = !invert_turn;
+      // Set transform data for the shader
+      glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+      glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+      glUniformMatrix4fv(projectionLoc, 1, GL_FALSE,
+                         glm::value_ptr(projection));
 
-    // Bind the roof texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, roof_tex);
-    glUniform1i(texLoc, 0);
-    // Draw the roof
-    glBindVertexArray(roof_VAO);
-    glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+      // Bind the roof texture
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, roof_tex);
+      glUniform1i(texLoc, 0);
+      // Draw the roof
+      glBindVertexArray(roof_VAO);
+      glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
-    // Bind the walls texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, wall_tex);
-    glUniform1i(texLoc, 0);
-    // Draw the walls
-    glBindVertexArray(walls_VAO);
-    glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
+      // Bind the walls texture
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, wall_tex);
+      glUniform1i(texLoc, 0);
+      // Draw the walls
+      glBindVertexArray(walls_VAO);
+      glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
+    }
 
     // Display the updated rendered data
     glfwSwapBuffers(window);
