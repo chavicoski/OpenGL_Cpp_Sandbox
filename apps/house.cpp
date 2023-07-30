@@ -9,17 +9,22 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // Config for the turn animation speed
-const int min_speed = 2;
-const int max_speed = 5;
+const int MIN_SPEED = 2;
+const int MAX_SPEED = 5;
 // Camera movement speed with user input
-const float baseCameraSpeed = 3.0f;
+const float CAMERA_SPEED = 3.0f;
 
+const float WIN_WIDTH = 800.0f;
+const float WIN_HEIGHT = 600.0f;
+
+// Auxiliary variables of the mouse controller
 bool firstMouse = true;
-float lastX = 800.0f / 2.0;
-float lastY = 600.0 / 2.0;
+float lastX = WIN_WIDTH / 2.0;
+float lastY = WIN_HEIGHT / 2.0;
+
 // Set camera initial view config
-glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 8.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+const glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 8.0f);
+const glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 // Create the camera controller
 Camera camera = Camera(cameraPos, cameraUp);
 // Camera Field Of View
@@ -167,10 +172,6 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
   lastX = xpos;
   lastY = ypos;
 
-  float sensitivity = 0.1f; // change this value to your liking
-  xoffset *= sensitivity;
-  yoffset *= sensitivity;
-
   camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
@@ -195,7 +196,8 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
   // Initialize the window
-  GLFWwindow *window = glfwCreateWindow(640, 480, "OpenGL Sandbox", NULL, NULL);
+  GLFWwindow *window =
+      glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "OpenGL Sandbox", NULL, NULL);
   if (!window) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -262,7 +264,7 @@ int main() {
   // Create the perspective projection matrix
   // TODO: Add scroll callback
   glm::mat4 projection =
-      glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
+      glm::perspective(glm::radians(fov), WIN_WIDTH / WIN_HEIGHT, 0.1f, 100.0f);
 
   // Keep track of the elapsed time to control movement speed
   float lastFrameTime = 0.0f;
@@ -282,7 +284,7 @@ int main() {
     const float deltaTime = currentFrameTime - lastFrameTime;
     lastFrameTime = currentFrameTime;
 
-    const float cameraSpeed = baseCameraSpeed * deltaTime;
+    const float cameraSpeed = CAMERA_SPEED * deltaTime;
     // Process user input to move the camera
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
       camera.ProcessKeyboard(CameraMovement::FORWARD, deltaTime);
@@ -306,7 +308,7 @@ int main() {
       model = glm::translate(model, house_pos);
       // Apply rotation over Y-axis using the elapsed time
       const float rotation =
-          (speed_idx % max_speed + min_speed) * glfwGetTime();
+          (speed_idx % MAX_SPEED + MIN_SPEED) * glfwGetTime();
       model = glm::rotate(model, invert_turn ? -rotation : rotation,
                           glm::vec3(0.0f, 1.0f, 0.0f));
       speed_idx++;
