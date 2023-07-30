@@ -2,10 +2,28 @@
 #include <iostream>
 #include <string>
 #define STB_IMAGE_IMPLEMENTATION
+#include "flycamera.hpp"
 #include "stb/stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+// Config for the turn animation speed
+const int min_speed = 2;
+const int max_speed = 5;
+// Camera movement speed with user input
+const float baseCameraSpeed = 3.0f;
+
+bool firstMouse = true;
+float lastX = 800.0f / 2.0;
+float lastY = 600.0 / 2.0;
+// Set camera initial view config
+glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 8.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+// Create the camera controller
+Camera camera = Camera(cameraPos, cameraUp);
+// Camera Field Of View
+float fov = 45.0f;
 
 GLuint texture_setup(const std::string &filepath) {
   // Generate the OpenGL texture object
@@ -133,6 +151,37 @@ void set_up_walls() {
   glEnableVertexAttribArray(2);
 }
 
+void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
+  float xpos = static_cast<float>(xposIn);
+  float ypos = static_cast<float>(yposIn);
+
+  if (firstMouse) {
+    lastX = xpos;
+    lastY = ypos;
+    firstMouse = false;
+  }
+
+  float xoffset = xpos - lastX;
+  float yoffset =
+      lastY - ypos; // reversed since y-coordinates go from bottom to top
+  lastX = xpos;
+  lastY = ypos;
+
+  float sensitivity = 0.1f; // change this value to your liking
+  xoffset *= sensitivity;
+  yoffset *= sensitivity;
+
+  camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  fov -= (float)yoffset;
+  if (fov < 1.0f)
+    fov = 1.0f;
+  if (fov > 45.0f)
+    fov = 45.0f;
+}
+
 int main() {
   // Initialize the window manager
   if (!glfwInit()) {
@@ -151,6 +200,9 @@ int main() {
     glfwTerminate();
     exit(EXIT_FAILURE);
   }
+  // Capture the mouse when focusing the window
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
   // Set the window as the OpenGL context
   glfwMakeContextCurrent(window);
 
@@ -203,13 +255,17 @@ int main() {
   GLuint viewLoc = glGetUniformLocation(shader, "view");
   GLuint projectionLoc = glGetUniformLocation(shader, "projection");
 
-  // Create the perspective projection matrix
-  glm::mat4 projection =
-      glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+  // Set mouse handling callback
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
-  // Config for the turn animation speed
-  const int min_speed = 2;
-  const int max_speed = 5;
+  // Create the perspective projection matrix
+  // TODO: Add scroll callback
+  glm::mat4 projection =
+      glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
+
+  // Keep track of the elapsed time to control movement speed
+  float lastFrameTime = 0.0f;
 
   while (!glfwWindowShouldClose(window)) {
     // Read used input
@@ -221,14 +277,24 @@ int main() {
     // Prepare the shaders to draw
     glUseProgram(shader);
 
-    // Create the LookAt matrix for the camera
-    const float radius = 8.0f;
-    float camX = sin(glfwGetTime()) * radius;
-    float camZ = cos(glfwGetTime()) * radius;
-    glm::vec3 cameraPos = glm::vec3(camX, 1.5f, camZ);
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, up);
+    // Compute elapsed time between frames
+    const float currentFrameTime = glfwGetTime();
+    const float deltaTime = currentFrameTime - lastFrameTime;
+    lastFrameTime = currentFrameTime;
+
+    const float cameraSpeed = baseCameraSpeed * deltaTime;
+    // Process user input to move the camera
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+      camera.ProcessKeyboard(CameraMovement::FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+      camera.ProcessKeyboard(CameraMovement::BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+      camera.ProcessKeyboard(CameraMovement::LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+      camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
+
+    // Create the LooAt matrix for the camera
+    glm::mat4 view = camera.GetViewMatrix();
 
     int speed_idx = 0;
     bool invert_turn = false;
