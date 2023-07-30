@@ -203,11 +203,8 @@ int main() {
   GLuint viewLoc = glGetUniformLocation(shader, "view");
   GLuint projectionLoc = glGetUniformLocation(shader, "projection");
 
-  // Coordinates transform matrices
-  glm::mat4 model, view, projection;
-  view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, -5.0f));
-  view = glm::rotate(view, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-  projection =
+  // Create the perspective projection matrix
+  glm::mat4 projection =
       glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
   // Config for the turn animation speed
@@ -224,12 +221,21 @@ int main() {
     // Prepare the shaders to draw
     glUseProgram(shader);
 
+    // Create the LookAt matrix for the camera
+    const float radius = 8.0f;
+    float camX = sin(glfwGetTime()) * radius;
+    float camZ = cos(glfwGetTime()) * radius;
+    glm::vec3 cameraPos = glm::vec3(camX, 1.5f, camZ);
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, up);
+
     int speed_idx = 0;
     bool invert_turn = false;
     // Draw each house in its corresponding postion using the model transform
     for (glm::vec3 &house_pos : house_positions) {
       // Initialize the transform matrix with the identity matrix
-      model = glm::mat4(1.0f);
+      glm::mat4 model = glm::mat4(1.0f);
       // Apply translation between rotations
       model = glm::translate(model, house_pos);
       // Apply rotation over Y-axis using the elapsed time
