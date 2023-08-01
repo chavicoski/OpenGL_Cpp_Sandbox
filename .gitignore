@@ -1,2 +1,4 @@
 build/
 .DS_Store
+.ccls*
+compile_commands.json
