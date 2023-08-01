@@ -261,11 +261,6 @@ int main() {
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
-  // Create the perspective projection matrix
-  // TODO: Add scroll callback
-  glm::mat4 projection =
-      glm::perspective(glm::radians(fov), WIN_WIDTH / WIN_HEIGHT, 0.1f, 100.0f);
-
   // Keep track of the elapsed time to control movement speed
   float lastFrameTime = 0.0f;
 
@@ -297,6 +292,10 @@ int main() {
 
     // Create the LooAt matrix for the camera
     glm::mat4 view = camera.GetViewMatrix();
+
+    // Create the perspective projection matrix
+    glm::mat4 projection = glm::perspective(
+        glm::radians(fov), WIN_WIDTH / WIN_HEIGHT, 0.1f, 100.0f);
 
     int speed_idx = 0;
     bool invert_turn = false;
