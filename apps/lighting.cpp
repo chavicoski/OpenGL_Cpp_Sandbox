@@ -65,11 +65,11 @@ void set_up_roof() {
   // Triangle vertices data
   // Format: postion(x, y, z), color(r, g, b), texCoord(x, y)
   constexpr float vertices[45] = {
-      -0.5f, 0.0f, 0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Left-front, Red
-      0.5f,  0.0f, 0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Right-front, Green
-      0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f, 0.5f, 1.0f, // Top-center, Blue
-      -0.5f, 0.0f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Left-back, Red
-      0.5f,  0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // Right-back, Green
+      -0.5f, 0.0f, 0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Left-front, Red
+      0.5f,  0.0f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Right-front, Green
+      0.0f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f, 0.5f, 1.0f, // Top-center, Blue
+      -0.5f, 0.0f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Left-back, Red
+      0.5f,  0.0f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Right-back, Green
   };
   // Order to draw the unique vertices to form the roof pyramid
   constexpr GLuint indices[12] = {
@@ -109,14 +109,14 @@ void set_up_walls() {
   // Rectangle walls unique vertices data
   // Format: postion(x, y, z), color(r, g, b), texCoord(x, y)
   constexpr float vertices[64] = {
-      0.5f,  0.0f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right-front
-      0.5f,  -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-right-front
-      -0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left-front
-      -0.5f, 0.0f,  0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left-front
-      0.5f,  0.0f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top-right-back
-      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-right-back
-      -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, // Bottom-left-back
-      -0.5f, 0.0f,  -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f  // Top-left-back
+      0.5f,  0.0f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // Top-right-front
+      0.5f,  -0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-right-front
+      -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left-front
+      -0.5f, 0.0f,  0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // Top-left-front
+      0.5f,  0.0f,  -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // Top-right-back
+      0.5f,  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-right-back
+      -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-left-back
+      -0.5f, 0.0f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f  // Top-left-back
   };
   // Order to draw the unique vertices to form the walls cube
   constexpr GLuint indices[24] = {
