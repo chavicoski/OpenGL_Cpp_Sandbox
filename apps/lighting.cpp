@@ -3,6 +3,7 @@
 #include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include "flycamera.hpp"
+#include "shader.hpp"
 #include "stb/stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -245,7 +246,7 @@ int main() {
   // Enable Z-buffer
   glEnable(GL_DEPTH_TEST);
 
-  GLuint shader = make_shader("../../src/shaders/lighting.vert",
+  Shader base_shader = Shader("../../src/shaders/lighting.vert",
                               "../../src/shaders/lighting.frag");
 
   // Prepare the roof texture
@@ -276,13 +277,13 @@ int main() {
       glm::vec3(-2.0f, 0.0f, -2.0f), glm::vec3(-0.8f, 0.0f, -6.0f)};
 
   // Get uniform variables locations to update them in the render loop
-  GLuint useTexLoc = glGetUniformLocation(shader, "useTexture");
-  GLuint texLoc = glGetUniformLocation(shader, "baseTexture");
-  GLuint lightColorLoc = glGetUniformLocation(shader, "lightColor");
-  GLuint objectColorLoc = glGetUniformLocation(shader, "objectColor");
-  GLuint modelLoc = glGetUniformLocation(shader, "model");
-  GLuint viewLoc = glGetUniformLocation(shader, "view");
-  GLuint projectionLoc = glGetUniformLocation(shader, "projection");
+  GLuint useTexLoc = glGetUniformLocation(base_shader.ID, "useTexture");
+  GLuint texLoc = glGetUniformLocation(base_shader.ID, "baseTexture");
+  GLuint lightColorLoc = glGetUniformLocation(base_shader.ID, "lightColor");
+  GLuint objectColorLoc = glGetUniformLocation(base_shader.ID, "objectColor");
+  GLuint modelLoc = glGetUniformLocation(base_shader.ID, "model");
+  GLuint viewLoc = glGetUniformLocation(base_shader.ID, "view");
+  GLuint projectionLoc = glGetUniformLocation(base_shader.ID, "projection");
 
   // Set mouse handling callback
   glfwSetCursorPosCallback(window, mouse_callback);
@@ -299,7 +300,7 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Prepare the shaders to draw
-    glUseProgram(shader);
+    base_shader.use();
 
     // Compute elapsed time between frames
     const float currentFrameTime = glfwGetTime();
@@ -387,7 +388,7 @@ int main() {
     glfwSwapBuffers(window);
   }
 
-  glDeleteProgram(shader);
+  glDeleteProgram(base_shader.ID);
   glfwTerminate();
   return 0;
 }
