@@ -228,8 +228,8 @@ int main() {
   // Enable Z-buffer
   glEnable(GL_DEPTH_TEST);
 
-  Shader shader =
-      Shader("../../src/shaders/house.vert", "../../src/shaders/house.frag");
+  Shader shader = Shader("../../src/shaders/house/house.vert",
+                         "../../src/shaders/house/house.frag");
 
   // Prepare the roof texture
   GLuint roof_tex = texture_setup("../../textures/roof.png");
