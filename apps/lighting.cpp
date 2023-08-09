@@ -30,6 +30,10 @@ Camera camera = Camera(cameraPos, cameraUp);
 // Camera Field Of View
 float fov = 45.0f;
 
+// Lighting
+glm::vec3 light_position = glm::vec3(0.0f, 0.5f, 0.0f);
+glm::vec3 lightCubeColor = glm::vec3(0.5f, 0.5f, 1.0f);
+
 GLuint texture_setup(const std::string &filepath) {
   // Generate the OpenGL texture object
   GLuint texture;
@@ -63,13 +67,13 @@ GLuint texture_setup(const std::string &filepath) {
 
 void set_up_roof() {
   // Triangle vertices data
-  // Format: postion(x, y, z), color(r, g, b), texCoord(x, y)
-  constexpr float vertices[45] = {
-      -0.5f, 0.0f, 0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Left-front, Red
-      0.5f,  0.0f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Right-front, Green
-      0.0f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f, 0.5f, 1.0f, // Top-center, Blue
-      -0.5f, 0.0f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Left-back, Red
-      0.5f,  0.0f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Right-back, Green
+  // Format: postion(x, y, z), texCoord(x, y)
+  constexpr float vertices[25] = {
+      -0.5f, 0.0f, 0.5f,  0.0f, 0.0f, // Left-front
+      0.5f,  0.0f, 0.5f,  1.0f, 0.0f, // Right-front
+      0.0f,  0.5f, 0.0f,  0.5f, 1.0f, // Top-center
+      -0.5f, 0.0f, -0.5f, 1.0f, 0.0f, // Left-back
+      0.5f,  0.0f, -0.5f, 0.0f, 0.0f, // Right-back
   };
   // Order to draw the unique vertices to form the roof pyramid
   constexpr GLuint indices[12] = {
@@ -93,30 +97,26 @@ void set_up_roof() {
   // Push the vertex data into the buffer
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // Prepare the vertex position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
-  // Prepare the vertex color attribute
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+  // Prepare the texture coordinates attribute
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
-  // Prepare the texture coordinates attribute
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
 }
 
 void set_up_walls() {
   // Rectangle walls unique vertices data
-  // Format: postion(x, y, z), color(r, g, b), texCoord(x, y)
-  constexpr float vertices[64] = {
-      0.5f,  0.0f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // Top-right-front
-      0.5f,  -0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-right-front
-      -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left-front
-      -0.5f, 0.0f,  0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // Top-left-front
-      0.5f,  0.0f,  -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // Top-right-back
-      0.5f,  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-right-back
-      -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-left-back
-      -0.5f, 0.0f,  -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f  // Top-left-back
+  // Format: postion(x, y, z), texCoord(x, y)
+  constexpr float vertices[40] = {
+      0.5f,  0.0f,  0.5f,  1.0f, 1.0f, // Top-right-front
+      0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, // Bottom-right-front
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, // Bottom-left-front
+      -0.5f, 0.0f,  0.5f,  0.0f, 1.0f, // Top-left-front
+      0.5f,  0.0f,  -0.5f, 0.0f, 1.0f, // Top-right-back
+      0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-right-back
+      -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, // Bottom-left-back
+      -0.5f, 0.0f,  -0.5f, 1.0f, 1.0f  // Top-left-back
   };
   // Order to draw the unique vertices to form the walls cube
   constexpr GLuint indices[24] = {
@@ -144,16 +144,34 @@ void set_up_walls() {
   // Push the vertex data into the buffer
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // Prepare the vertex position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
-  // Prepare the vertex color attribute
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+  // Prepare the texture coordinates attribute
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
-  // Prepare the texture coordinates attribute
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
+}
+
+void set_up_light() {
+  // Vertices to create a cube
+  float vertices[108] = {
+      -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,
+      0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
+      0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,
+      -0.5f, 0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f,
+      0.5f,  -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
+      0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  -0.5f,
+      0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,
+      0.5f,  0.5f,  -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f,
+      0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f,
+      -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
+      0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f};
+  GLuint VBO;
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
@@ -227,8 +245,8 @@ int main() {
   // Enable Z-buffer
   glEnable(GL_DEPTH_TEST);
 
-  GLuint shader = make_shader("../../src/shaders/vertex.vert",
-                              "../../src/shaders/fragment.frag");
+  GLuint shader = make_shader("../../src/shaders/lighting.vert",
+                              "../../src/shaders/lighting.frag");
 
   // Prepare the roof texture
   GLuint roof_tex = texture_setup("../../textures/roof.png");
@@ -246,13 +264,22 @@ int main() {
   glBindVertexArray(walls_VAO);
   set_up_walls();
 
+  // Store the walls vertices config in a Vertex Array Object
+  GLuint light_VAO;
+  glGenVertexArrays(1, &light_VAO);
+  glBindVertexArray(light_VAO);
+  set_up_light();
+
   glm::vec3 house_positions[6] = {
       glm::vec3(2.0f, 0.0f, -1.0f),  glm::vec3(-1.0f, 0.0f, 0.5f),
       glm::vec3(0.9f, 0.0f, 1.0f),   glm::vec3(0.7f, 0.0f, -3.0f),
       glm::vec3(-2.0f, 0.0f, -2.0f), glm::vec3(-0.8f, 0.0f, -6.0f)};
 
   // Get uniform variables locations to update them in the render loop
+  GLuint useTexLoc = glGetUniformLocation(shader, "useTexture");
   GLuint texLoc = glGetUniformLocation(shader, "baseTexture");
+  GLuint lightColorLoc = glGetUniformLocation(shader, "lightColor");
+  GLuint objectColorLoc = glGetUniformLocation(shader, "objectColor");
   GLuint modelLoc = glGetUniformLocation(shader, "model");
   GLuint viewLoc = glGetUniformLocation(shader, "view");
   GLuint projectionLoc = glGetUniformLocation(shader, "projection");
@@ -300,6 +327,14 @@ int main() {
     glm::mat4 projection = glm::perspective(
         glm::radians(fov), WIN_WIDTH / WIN_HEIGHT, 0.1f, 100.0f);
 
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+    glUniform1ui(useTexLoc, 1);
+    glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
+    // Set the color for the houses
+    glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
+
     int speed_idx = 0;
     bool invert_turn = false;
     // Draw each house in its corresponding postion using the model transform
@@ -317,9 +352,6 @@ int main() {
       invert_turn = !invert_turn;
       // Set transform data for the shader
       glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-      glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-      glUniformMatrix4fv(projectionLoc, 1, GL_FALSE,
-                         glm::value_ptr(projection));
 
       // Bind the roof texture
       glActiveTexture(GL_TEXTURE0);
@@ -337,6 +369,19 @@ int main() {
       glBindVertexArray(walls_VAO);
       glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
     }
+
+    // Disable textures. The light cube only uses color
+    glUniform1ui(useTexLoc, 0);
+    // Set the color for the light cube
+    glUniform3fv(objectColorLoc, 1, glm::value_ptr(lightCubeColor));
+    // Set up the light postion and scale
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, light_position);
+    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    // Draw the light cube
+    glBindVertexArray(light_VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // Display the updated rendered data
     glfwSwapBuffers(window);
