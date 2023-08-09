@@ -33,7 +33,7 @@ float fov = 45.0f;
 
 // Lighting
 glm::vec3 light_position = glm::vec3(0.0f, 0.5f, 0.0f);
-glm::vec3 lightCubeColor = glm::vec3(0.5f, 0.5f, 1.0f);
+glm::vec3 lightCubeColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
 GLuint texture_setup(const std::string &filepath) {
   // Generate the OpenGL texture object
@@ -246,8 +246,10 @@ int main() {
   // Enable Z-buffer
   glEnable(GL_DEPTH_TEST);
 
-  Shader base_shader = Shader("../../src/shaders/lighting/lighting.vert",
-                              "../../src/shaders/lighting/lighting.frag");
+  Shader base_shader = Shader("../../src/shaders/lighting/base.vert",
+                              "../../src/shaders/lighting/base.frag");
+  Shader light_shader = Shader("../../src/shaders/lighting/base.vert",
+                               "../../src/shaders/lighting/light.frag");
 
   // Prepare the roof texture
   GLuint roof_tex = texture_setup("../../textures/roof.png");
@@ -277,13 +279,21 @@ int main() {
       glm::vec3(-2.0f, 0.0f, -2.0f), glm::vec3(-0.8f, 0.0f, -6.0f)};
 
   // Get uniform variables locations to update them in the render loop
-  GLuint useTexLoc = glGetUniformLocation(base_shader.ID, "useTexture");
-  GLuint texLoc = glGetUniformLocation(base_shader.ID, "baseTexture");
-  GLuint lightColorLoc = glGetUniformLocation(base_shader.ID, "lightColor");
-  GLuint objectColorLoc = glGetUniformLocation(base_shader.ID, "objectColor");
-  GLuint modelLoc = glGetUniformLocation(base_shader.ID, "model");
-  GLuint viewLoc = glGetUniformLocation(base_shader.ID, "view");
-  GLuint projectionLoc = glGetUniformLocation(base_shader.ID, "projection");
+  GLuint base_texLoc = glGetUniformLocation(base_shader.ID, "baseTexture");
+  GLuint base_lightColorLoc =
+      glGetUniformLocation(base_shader.ID, "lightColor");
+  GLuint base_objectColorLoc =
+      glGetUniformLocation(base_shader.ID, "objectColor");
+  GLuint base_modelLoc = glGetUniformLocation(base_shader.ID, "model");
+  GLuint base_viewLoc = glGetUniformLocation(base_shader.ID, "view");
+  GLuint base_projectionLoc =
+      glGetUniformLocation(base_shader.ID, "projection");
+  GLuint light_objectColorLoc =
+      glGetUniformLocation(light_shader.ID, "objectColor");
+  GLuint light_modelLoc = glGetUniformLocation(light_shader.ID, "model");
+  GLuint light_viewLoc = glGetUniformLocation(light_shader.ID, "view");
+  GLuint light_projectionLoc =
+      glGetUniformLocation(light_shader.ID, "projection");
 
   // Set mouse handling callback
   glfwSetCursorPosCallback(window, mouse_callback);
@@ -299,7 +309,7 @@ int main() {
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Prepare the shaders to draw
+    // Prepare the shaders to draw the houses
     base_shader.use();
 
     // Compute elapsed time between frames
@@ -328,13 +338,13 @@ int main() {
     glm::mat4 projection = glm::perspective(
         glm::radians(fov), WIN_WIDTH / WIN_HEIGHT, 0.1f, 100.0f);
 
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(base_viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(base_projectionLoc, 1, GL_FALSE,
+                       glm::value_ptr(projection));
 
-    glUniform1ui(useTexLoc, 1);
-    glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
     // Set the color for the houses
-    glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
+    glUniform3f(base_objectColorLoc, 1.0f, 1.0f, 1.0f);
+    glUniform3f(base_lightColorLoc, 1.0f, 1.0f, 1.0f);
 
     int speed_idx = 0;
     bool invert_turn = false;
@@ -352,12 +362,12 @@ int main() {
       speed_idx++;
       invert_turn = !invert_turn;
       // Set transform data for the shader
-      glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+      glUniformMatrix4fv(base_modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
       // Bind the roof texture
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, roof_tex);
-      glUniform1i(texLoc, 0);
+      glUniform1i(base_texLoc, 0);
       // Draw the roof
       glBindVertexArray(roof_VAO);
       glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
@@ -365,21 +375,24 @@ int main() {
       // Bind the walls texture
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, wall_tex);
-      glUniform1i(texLoc, 0);
+      glUniform1i(base_texLoc, 0);
       // Draw the walls
       glBindVertexArray(walls_VAO);
       glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
     }
 
-    // Disable textures. The light cube only uses color
-    glUniform1ui(useTexLoc, 0);
+    // Prepare the shaders to draw the light cube
+    light_shader.use();
+    glUniformMatrix4fv(light_viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(light_projectionLoc, 1, GL_FALSE,
+                       glm::value_ptr(projection));
     // Set the color for the light cube
-    glUniform3fv(objectColorLoc, 1, glm::value_ptr(lightCubeColor));
+    glUniform3fv(light_objectColorLoc, 1, glm::value_ptr(lightCubeColor));
     // Set up the light postion and scale
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, light_position);
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(light_modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     // Draw the light cube
     glBindVertexArray(light_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -389,6 +402,7 @@ int main() {
   }
 
   glDeleteProgram(base_shader.ID);
+  glDeleteProgram(light_shader.ID);
   glfwTerminate();
   return 0;
 }
